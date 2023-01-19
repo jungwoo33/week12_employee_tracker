@@ -17,7 +17,6 @@ const db = mysql.createConnection(
    {
       host: 'localhost',
       user: 'root',
-      password: '',
       //password: process.env.MYSQL_PASSWORD,
       database: 'week12_employee_db'
    },
