@@ -17,8 +17,7 @@ const db = mysql.createConnection(
    {
       host: 'localhost',
       user: 'root',
-      password: '',
-      //password: process.env.MYSQL_PASSWORD,
+      password: process.env.MYSQL_PASSWORD,
       database: 'week12_employee_db'
    },
    //console.log(`Connected to the week12_employee_db database.`),
@@ -367,7 +366,6 @@ function main_prompt(){
       //====================================================================================================================================!   
       }else if(user_answer === "Add Role"){
          // first, let's get the "department_list" from the "department" table:
-         ///* if I activate this, it doesn't run... why???
          db.query(`SELECT * FROM department`, function(err,results){
             if(err){
                throw err;
@@ -398,109 +396,100 @@ function main_prompt(){
                const department_choices = results.map(({name,id}) => ({name: name, value: id}));
                //return results.map(({name,id}) => ({name: name, value: id}));
                //console.log(department_choices);
-            }
-         })
-
-         // jw, So, basically, the following section must come after above section's success, 
-         // so, I may need to use promise()...
-         // jw, from here...
-
-         //*/
-         //console.log("jw1");
-         const add_role_question = [
-            {
-               name: "add_role_title",
-               type: "input",
-               message: "   What is the name of the role?",
-               validate: function(answer){
-                  if(answer.length < 1){
-                     return console.log("A valid role must be provided.");
-                  }
-                  return true; // default: false.
-               }
-            },
-            {
-               name: "add_role_salary",
-               type: "input",
-               message: "   What is the salary of the role?",
-               validate: function(answer){
-                  if(answer.length < 1){
-                     return console.log("A valid salary must be provided.");
-                  }
-                  return true; // default: false.
-               }
-            },
-            {
-               name: "add_role_department",
-               type: "list",
-               message: "   Which department does the role belong to?",
-               // Note: this choices should be properly updated with updated department names... I will do it later...
-               choices: department_choices,
-               /* Note: department_choices will have (e.g.):
-                     [
+               
+               // Now, we can creat "add_role_question" with information of "department_choices"
+               const add_role_question = [
+                  {
+                     name: "add_role_title",
+                     type: "input",
+                     message: "   What is the name of the role?",
+                     validate: function(answer){
+                        if(answer.length < 1){
+                           return console.log("A valid role must be provided.");
+                        }
+                        return true; // default: false.
+                     }
+                  },
+                  {
+                     name: "add_role_salary",
+                     type: "input",
+                     message: "   What is the salary of the role?",
+                     validate: function(answer){
+                        if(answer.length < 1){
+                           return console.log("A valid salary must be provided.");
+                        }
+                        return true; // default: false.
+                     }
+                  },
+                  {
+                     name: "add_role_department",
+                     type: "list",
+                     message: "   Which department does the role belong to?",
+                     // Note: this choices should be properly updated with updated department names... I will do it later...
+                     choices: department_choices,
+                     /* Note: department_choices will have (e.g.):
+                           [
+                              { name: 'Sales', value: 1 },
+                              { name: 'Engineering', value: 2 },
+                              { name: 'Finance', value: 3 },
+                              { name: 'Legal', value: 4 },
+                           ]
+                     */
+                     /*
+                     choices: [
                         { name: 'Sales', value: 1 },
                         { name: 'Engineering', value: 2 },
                         { name: 'Finance', value: 3 },
                         { name: 'Legal', value: 4 },
-                     ]
-               */
-               /*
-               choices: [
-                  { name: 'Sales', value: 1 },
-                  { name: 'Engineering', value: 2 },
-                  { name: 'Finance', value: 3 },
-                  { name: 'Legal', value: 4 },
-               ],
-               */
-               validate: function(answer){
-                  if(answer.length < 1){
-                     return console.log("A valid department must be provided.");
-                  }
-                  return true; // default: false.
-               }
-            },
-         ];
-         //console.log('jw2');
-         //console.log(add_role_question);
-      
-         inquirer.prompt(add_role_question).then((answers) => {
-            let answer1 = answers.add_role_title; // string
-            let answer2 = answers.add_role_salary; // decimal
-            let answer3 = answers.add_role_department; // int
-            
-            // query database & insert additional role into the "role" table.
-            db.query(`INSERT INTO role (title,salary,department_id) VALUES ("${answer1}",${answer2},${answer3})`, function(err,results){
-               if(err){
-                  throw err;
-               }else{
-                  // if adding role in the "role" table is successful,
-                  // then, query database & show the "role" table. 
-                  db.query('SELECT * FROM role', function(err,results){
+                     ],
+                     */
+                     validate: function(answer){
+                        if(answer.length < 1){
+                           return console.log("A valid department must be provided.");
+                        }
+                        return true; // default: false.
+                     }
+                  },
+               ];
+
+               // Now, prompt (show) questions and receive the user answer & proceed showing the updated results:
+               inquirer.prompt(add_role_question).then((answers) => {
+                  let answer1 = answers.add_role_title; // string
+                  let answer2 = answers.add_role_salary; // decimal
+                  let answer3 = answers.add_role_department; // int
+                  
+                  // query database & insert additional role into the "role" table.
+                  db.query(`INSERT INTO role (title,salary,department_id) VALUES ("${answer1}",${answer2},${answer3})`, function(err,results){
                      if(err){
                         throw err;
                      }else{
-                        console.log('\n');
-                        console.log(`A new role, "${answer1}", has been added to the database:"`);
-                        console.table(results);
-                        main_prompt(); // go back to the "main_prompt()"
+                        // if adding role in the "role" table is successful,
+                        // then, query database & show the "role" table. 
+                        db.query('SELECT * FROM role', function(err,results){
+                           if(err){
+                              throw err;
+                           }else{
+                              console.log('\n');
+                              console.log(`A new role, "${answer1}", has been added to the database:"`);
+                              console.table(results);
+                              main_prompt(); // go back to the "main_prompt()"
+                           }
+                        })         
+                                 
+                        //console.table(results);
+                        //main_prompt();
                      }
-                  })         
-                           
-                  //console.table(results);
-                  //main_prompt();
-               }
-            })
-         })
-         .catch(error=>{
-            if(error.isTtyError){
-               // Prompt couldn't be rendered in the current environment.
-            }else{
-               // Something else went wrong.
-            }
-         }); // End of inquirer
-
-
-         // until now...
+                  })
+               })
+               .catch(error=>{
+                  if(error.isTtyError){
+                     // Prompt couldn't be rendered in the current environment.
+                  }else{
+                     // Something else went wrong.
+                  }
+               }); // End of inquirer
+            } // End of if(err) else ()
+         }) // End of db.query()
       //====================================================================================================================================!
       }else if(user_answer === "Add Employee"){
          inquirer.prompt(add_employee_question).then((answers) => {
