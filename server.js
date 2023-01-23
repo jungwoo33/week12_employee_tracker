@@ -36,14 +36,14 @@ function main_prompt(){
          type: "list",
          message: "What would you like to do?",
          choices: [
-            'View All Departments',
-            'View All Roles',
-            'View All Employees',
-            'Add Department',
-            'Add Role',
-            'Add Employee',
-            'Update Employee Role',
-            'Quit'
+            '1. View All Departments',
+            '2. View All Roles',
+            '3. View All Employees',
+            '4. Add Department',
+            '5. Add Role',
+            '6. Add Employee',
+            '7. Update Employee Role',
+            '8. Quit'
          ],
          validate: function(answer){
             if(answer.length < 1){
@@ -62,7 +62,7 @@ function main_prompt(){
       // let {user_answers} = answers; // since this will directly pointing "values" in {KEY: VALUE} pair.
 
       //====================================================================================================================================!
-      if(user_answer === "View All Departments"){
+      if(user_answer === "1. View All Departments"){
          // query database & show table: "department":
          db.query('SELECT * FROM department', function(err,results){
             if(err){
@@ -77,7 +77,7 @@ function main_prompt(){
             }
          });
       //====================================================================================================================================!   
-      }else if(user_answer === "View All Roles"){
+      }else if(user_answer === "2. View All Roles"){
          // query database & show table: "role":
          db.query('SELECT * FROM role', function(err,results){
             if(err){
@@ -90,8 +90,9 @@ function main_prompt(){
             }
          })
       //====================================================================================================================================!   
-      }else if(user_answer === "View All Employees"){
+      }else if(user_answer === "3. View All Employees"){
          // query database & show table: "employee":
+         /*
          db.query('SELECT * FROM employee', function(err,results){
             if(err){
                throw err;
@@ -102,14 +103,78 @@ function main_prompt(){
                main_prompt(); // go back to the "main_prompt()"
             }
          })
+         */
+         /* some tests ...
+         const jw_1 = `SELECT * 
+                     FROM employee 
+                     LEFT JOIN role ON employee.role_id = role.id`; 
+         const jw_2 = `SELECT * 
+                     FROM employee 
+                     LEFT JOIN role ON employee.role_id = role.id 
+                     LEFT JOIN department ON role.department_id = department.id`;
+         const jw_3 = `SELECT * 
+                     FROM employee 
+                     LEFT JOIN role ON employee.role_id = role.id 
+                     LEFT JOIN department ON role.department_id = department.id 
+                     LEFT JOIN employee AS manager ON employee.manager_id = manager.id`;
+
+         db.query(jw_1, function(err,results){
+            if(err){
+               throw err;
+            }else{
+               console.log('jw_1:');
+               console.table(results);
+            }
+         })
+         db.query(jw_2, function(err,results){
+            if(err){
+               throw err;
+            }else{
+               console.log('jw_2:');
+               console.table(results);
+            }
+         })
+         db.query(jw_3, function(err,results){
+            if(err){
+               throw err;
+            }else{
+               console.log('jw_3:');
+               console.table(results);
+            }
+         })
+         */
+
+         // Note: here, I have to use "LEFT JOIN", not just "JOIN", to show "null" in "manager" column.
+         const sql_query = `SELECT
+                                 employee.id,
+                                 employee.first_name,
+                                 employee.last_name,
+                                 role.title,
+                                 department.name AS department,
+                                 role.salary,
+                                 CONCAT(manager.first_name, " ", manager.last_name) AS manager
+                           FROM employee  
+                                 LEFT JOIN role ON employee.role_id = role.id
+                                 LEFT JOIN department ON role.department_id = department.id
+                                 LEFT JOIN employee manager ON employee.manager_id = manager.id`;
+         db.query(sql_query, function(err,results){
+            if(err){
+               throw err;
+            }else{
+               console.log('View All Employees:');
+               console.table(results);
+               console.log();
+               main_prompt(); // go back to the "main_prompt()"
+            }
+         })
       //====================================================================================================================================!   
-      }else if(user_answer === "Add Department"){
+      }else if(user_answer === "4. Add Department"){
          // Note, from the second questions, the questions are indented with 3 empty spaces to show that this is the secondary question.
          const add_department_question = [
             {
                name: "add_department",
                type: "input",
-               message: "   What is the name of the department?",
+               message: "   4.1 What is the name of the department?",
                validate: function(answer){
                   if(answer.length < 1){
                      return console.log("A valid department name must be provided.");
@@ -149,7 +214,7 @@ function main_prompt(){
             }
          }); // End of inquirer
       //====================================================================================================================================!   
-      }else if(user_answer === "Add Role"){
+      }else if(user_answer === "5. Add Role"){
          // first, let's get the "department_list" from the "department" table:
          db.query(`SELECT * FROM department`, function(err,results){
             if(err){
@@ -187,7 +252,7 @@ function main_prompt(){
                   {
                      name: "add_role_title",
                      type: "input",
-                     message: "   What is the name of the role?",
+                     message: "   5.1 What is the name of the role?",
                      validate: function(answer){
                         if(answer.length < 1){
                            return console.log("A valid role must be provided.");
@@ -198,7 +263,7 @@ function main_prompt(){
                   {
                      name: "add_role_salary",
                      type: "input",
-                     message: "   What is the salary of the role?",
+                     message: "   5.2 What is the salary of the role?",
                      validate: function(answer){
                         if(answer.length < 1){
                            return console.log("A valid salary must be provided.");
@@ -209,7 +274,7 @@ function main_prompt(){
                   {
                      name: "add_role_department",
                      type: "list",
-                     message: "   Which department does the role belong to?",
+                     message: "   5.3 Which department does the role belong to?",
                      // Note: this choices should be properly updated with updated department names... I will do it later...
                      choices: department_choices,
                      /* Note: department_choices will have (e.g.):
@@ -265,7 +330,7 @@ function main_prompt(){
             } // End of if(err) else ()
          }) // End of db.query()
       //====================================================================================================================================!
-      }else if(user_answer === "Add Employee"){
+      }else if(user_answer === "6. Add Employee"){
          // I will follow the same routine as in "Add role".
          // first, let's get the "role_list" from the "role" table:
          db.query(`SELECT * FROM role`, function(err,results){
@@ -304,7 +369,7 @@ function main_prompt(){
                         {
                            name: "add_employee_firstname",
                            type: "input",
-                           message: "   What is the employee's first name?",
+                           message: "   6.1 What is the employee's first name?",
                            validate: function(answer){
                               if(answer.length < 1){
                                  return console.log("A valid first name must be provided.");
@@ -315,7 +380,7 @@ function main_prompt(){
                         {
                            name: "add_employee_lastname",
                            type: "input",
-                           message: "   What is the employee's last name?",
+                           message: "   6.2 What is the employee's last name?",
                            validate: function(answer){
                               if(answer.length < 1){
                                  return console.log("A valid last name must be provided.");
@@ -326,7 +391,7 @@ function main_prompt(){
                         {
                            name: "add_employee_role",
                            type: "list",
-                           message: "   What is the employee's role?",
+                           message: "   6.3 What is the employee's role?",
                            choices: role_choices,
                            validate: function(answer){
                               if(answer.length < 1){
@@ -338,7 +403,7 @@ function main_prompt(){
                         {
                            name: "add_employee_manager",
                            type: "list",
-                           message: "   Who is the employee's manager?",
+                           message: "   6.4 Who is the employee's manager?",
                            choices: manager_choices,
                            validate: function(answer){
                               if(answer.length < 1){
@@ -388,7 +453,7 @@ function main_prompt(){
             } // End of if(err) else ()
          }) // End of outter db.query()
       //====================================================================================================================================!   
-      }else if(user_answer === "Update Employee Role"){
+      }else if(user_answer === "7. Update Employee Role"){
          // first, let's get the "employee_list" from the "employee" table:
          // Note, this part is almost identical to "Add Employee" section
          db.query(`SELECT * FROM role`, function(err,results){
@@ -427,7 +492,7 @@ function main_prompt(){
                         {
                            name: "update_name",
                            type: "list",
-                           message: "   Which employee's role do you want to update?",
+                           message: "   7.1 Which employee's role do you want to update?",
                            choices: employee_choices,
                            validate: function(answer){
                               if(answer.length < 1){
@@ -439,7 +504,7 @@ function main_prompt(){
                         {
                            name: "update_role",
                            type: "list",
-                           message: "   Which role do you want to assign the selected employee?",
+                           message: "   7.2 Which role do you want to assign the selected employee?",
                            choices: emp_role_choices,
                            validate: function(answer){
                               if(answer.length < 1){
@@ -490,7 +555,7 @@ function main_prompt(){
             } // End of if(err) else()
          }) // End of outter db.query()
       //====================================================================================================================================!   
-      }else if(user_answer === "Quit"){
+      }else if(user_answer === "8. Quit"){
          db.end(); // terminate the connection to mysql databse
          console.log("Bye Bye~~~!");
          process.exit(); // Kill node program.
